@@ -109,10 +109,18 @@ pub enum TriggerEventType {
 }
 
 #[derive(Debug)]
-pub enum MacroTaskMessage {
-    Start,
+pub enum MacroTaskEvent {
+    Start(UnboundedSender<rdev::EventType>),
     Stop,
     Abort,
+}
+
+#[derive(Debug)]
+pub enum MacroExecutorEvent {
+    Start(String),
+    Stop(String),
+    Abort(String),
+    AbortAll,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -126,14 +134,14 @@ pub struct Macro {
     pub enabled: bool,
     pub repeat_amount: u32,
     #[serde(skip_deserializing, skip_serializing)]
-    pub task_sender: UnboundedSender<MacroTaskMessage>,
+    pub task_sender: UnboundedSender<MacroTaskEvent>,
 }
 pub struct MacroTask {
-    pub task_receiver: UnboundedReceiver<MacroTaskMessage>,
+    pub task_receiver: UnboundedReceiver<MacroTaskEvent>,
 }
 
 impl MacroTask {
-    pub fn new(mut receive_channel: UnboundedReceiver<MacroTaskMessage>) {
+    pub fn new(mut receive_channel: UnboundedReceiver<MacroTaskEvent>) {
         tokio::task::spawn(async move {
             loop {
                 if let Some(message) = receive_channel.blocking_recv() {
@@ -147,10 +155,11 @@ impl MacroTask {
 
 impl Macro {
     pub fn new() -> Self {
-        let (mut task_sender, mut task_receiver) = tokio::sync::mpsc::unbounded_channel();
-
+        // Create a new associated task with the macro
+        let (mut task_sender, task_receiver) = tokio::sync::mpsc::unbounded_channel();
         MacroTask::new(task_receiver);
 
+        // Return the macro
         Macro {
             name: String::new(),
             icon: "".to_string(),
@@ -165,6 +174,18 @@ impl Macro {
             task_sender,
         }
     }
+    async fn on_event(&self, event: MacroTaskEvent) {
+        match event {
+            MacroTaskEvent::Start(keypress_sender) => {
+                self.task_sender
+                    .send(MacroTaskEvent::Start(keypress_sender))
+                    .unwrap();
+            }
+            MacroTaskEvent::Stop => self.task_sender.send(MacroTaskEvent::Stop).unwrap(),
+            MacroTaskEvent::Abort => self.task_sender.send(MacroTaskEvent::Abort).unwrap(),
+        }
+    }
+
     /// This function is used to execute a macro. It is called by the macro checker.
     /// It spawns async tasks to execute said events specifically.
     /// Make sure to expand this if you implement new action types.
@@ -411,21 +432,43 @@ fn keypress_executor_receiver(mut rchan_execute: UnboundedReceiver<rdev::EventTy
 }
 
 async fn macro_executor(
-    mut rchan_execute: UnboundedReceiver<String>,
+    mut rchan_execute: UnboundedReceiver<MacroExecutorEvent>,
     macro_id_list: Arc<RwLock<MacroLookup>>,
     schan_keypress_execute: UnboundedSender<rdev::EventType>,
 ) {
     loop {
-        if let Some(macro_id) = rchan_execute.blocking_recv() {
+        if let Some(macro_event) = rchan_execute.blocking_recv() {
             let macro_id_list = macro_id_list.read().await;
             let macro_id_list = &macro_id_list.id_map;
 
-            macro_id_list
-                .get(&macro_id)
-                .unwrap()
-                .task_sender
-                .send(MacroTaskMessage::Start)
-                .unwrap();
+            match macro_event {
+                MacroExecutorEvent::Start(macro_id) => {
+                    let schan_keypress_execute_clone = schan_keypress_execute.clone();
+                    macro_id_list
+                        .get(&macro_id)
+                        .unwrap()
+                        .task_sender
+                        .send(MacroTaskEvent::Start(schan_keypress_execute_clone))
+                        .unwrap()
+                }
+                MacroExecutorEvent::Stop(macro_id) => macro_id_list
+                    .get(&macro_id)
+                    .unwrap()
+                    .task_sender
+                    .send(MacroTaskEvent::Stop)
+                    .unwrap(),
+
+                MacroExecutorEvent::Abort(macro_id) => macro_id_list
+                    .get(&macro_id)
+                    .unwrap()
+                    .task_sender
+                    .send(MacroTaskEvent::Abort)
+                    .unwrap(),
+
+                MacroExecutorEvent::AbortAll => macro_id_list.iter().for_each(|(_, macro_item)| {
+                    macro_item.task_sender.send(MacroTaskEvent::Abort).unwrap()
+                }),
+            }
         }
     }
 }
@@ -441,7 +484,7 @@ fn check_macro_execution_efficiently(
     pressed_events: Vec<u32>,
     check_macros: Vec<String>,
     macro_data: Arc<RwLock<MacroLookup>>,
-    macro_channel_sender: UnboundedSender<String>,
+    macro_channel_sender: UnboundedSender<MacroExecutorEvent>,
     keypress_sender: UnboundedSender<rdev::EventType>,
 ) -> bool {
     let trigger_overview_print = check_macros.clone();
@@ -480,9 +523,11 @@ fn check_macro_execution_efficiently(
                             )
                             .unwrap();
 
-                            macro_sender.send(id_cloned).unwrap_or_else(|err| {
-                                error!("Error sending macro ID to execute: {}", err)
-                            });
+                            macro_sender
+                                .send(MacroExecutorEvent::Start(id_cloned))
+                                .unwrap_or_else(|err| {
+                                    error!("Error sending macro ID to execute: {}", err)
+                                });
 
                             // output = true;
                             return true;
@@ -500,9 +545,11 @@ fn check_macro_execution_efficiently(
                             // Disabled until a better fix is done
                             // plugin::util::lift_keys(data, &channel_clone_execute);
 
-                            macro_sender.send(id_cloned).unwrap_or_else(|err| {
-                                error!("Error sending macro ID to execute: {}", err)
-                            });
+                            macro_sender
+                                .send(MacroExecutorEvent::Start(id_cloned))
+                                .unwrap_or_else(|err| {
+                                    error!("Error sending macro ID to execute: {}", err)
+                                });
 
                             return true;
                         }
@@ -522,7 +569,7 @@ fn check_macro_execution_efficiently(
                     let id_cloned = macro_id.clone();
 
                     macro_sender
-                        .send(id_cloned)
+                        .send(MacroExecutorEvent::Start(id_cloned))
                         .unwrap_or_else(|err| error!("Error sending macro ID to execute: {}", err));
 
                     return true;
