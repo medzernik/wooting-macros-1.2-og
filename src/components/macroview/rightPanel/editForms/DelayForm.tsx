@@ -37,8 +37,8 @@ export default function DelayForm({
 
   const onInputBlur = useCallback(() => {
     let duration
-    if (delayDuration === '') {
-      duration = 0;
+    if (delayDuration === '' || Number(delayDuration) < 20) {
+      duration = 20;
     } else {
 
       duration = parseInt(delayDuration)

@@ -52,8 +52,8 @@ export default function KeyPressForm({
 
   const onInputBlur = useCallback(() => {
     let duration
-    if (keypressDuration === '') {
-      duration = 0;
+    if (keypressDuration === '' || Number(keypressDuration) < 20) {
+      duration = 20;
     } else {
 
       duration = parseInt(keypressDuration)
@@ -141,7 +141,7 @@ export default function KeyPressForm({
             justifyContent="center"
           >
             <Text fontSize={['xs', 'sm', 'md']} fontWeight="semibold">
-              Duration (ms)
+              Duration (ms) - 20ms minimum
             </Text>
           </GridItem>
           <GridItem w="full">
