@@ -3,6 +3,8 @@ use std::hash::Hash;
 
 use crate::plugin::mouse::MouseButton;
 use lazy_static::lazy_static;
+
+#[cfg(target_os = "windows")]
 use multiinput::KeyId;
 use rdev::{Button, Key};
 
@@ -407,6 +409,7 @@ pub static ref RDEV_TO_HID: HashMap<Key, u32> = {
 
 }
 
+#[cfg(target_os = "windows")]
 lazy_static! {
 #[derive(Debug, PartialEq, Hash, std::cmp::Eq)]
 pub static ref MULTIINPUT_TO_HID: HashMap<KeyId, u32> = {
@@ -583,6 +586,7 @@ pub static ref MULTIINPUT_TO_HID: HashMap<KeyId, u32> = {
 
 }
 
+#[cfg(target_os = "windows")]
 lazy_static! {
 ///Conversion from HID codes to the library backend enums.
 #[derive(Debug, PartialEq, Hash, std::cmp::Eq)]
