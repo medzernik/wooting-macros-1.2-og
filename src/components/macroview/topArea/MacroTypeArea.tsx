@@ -120,7 +120,7 @@ export default function MacroTypeArea() {
             bgColor={secondBg}
 
           >
-            {"Macro Type"}
+            {"   Macro Type   "}
           </Box>
           <Box
             maxWidth={isOpen ? "150px" : "0px"}
