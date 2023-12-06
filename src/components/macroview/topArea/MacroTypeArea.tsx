@@ -21,6 +21,7 @@ import { AddIcon, MinusIcon } from "@chakra-ui/icons";
 export default function MacroTypeArea() {
   const {macro, updateMacroType, updateMacroRepeatAmount} = useMacroContext()
   const borderColour = useColorModeValue('gray.400', 'gray.600')
+  const secondBg = useColorModeValue('blue.50', 'gray.900')
   const typeIcons = [<HiArrowRight/>, <HiArrowPath/>, <HiArrowDownTray/>, <HiArrowPathRoundedSquare/>]
   const {isOpen, onOpen, onClose} = useDisclosure();
   const [repeatValue, setRepeatValue] = useState(0);
@@ -79,6 +80,7 @@ export default function MacroTypeArea() {
           Macro Type
         </Text>
         <HStack>
+
           {(Object.keys(MacroType) as Array<keyof typeof MacroType>)
             .filter(checkIfStringIsNonNumeric)
             .map((value: string, index: number) => (
@@ -108,6 +110,18 @@ export default function MacroTypeArea() {
                 ></IconButton>
               </Tooltip>
             ))}
+
+          <Box
+            position="absolute"
+            // left="50%"
+            transform="translate(0%, -140%)"
+            fontSize="md"
+            zIndex="1"
+            bgColor={secondBg}
+
+          >
+            {"Macro Type"}
+          </Box>
           <Box
             maxWidth={isOpen ? "150px" : "0px"}
             overflow="hidden"
@@ -117,6 +131,7 @@ export default function MacroTypeArea() {
               animation: `${isOpen ? expandAnimation : closeAnimation} 0.5s ease-out forwards`
             }}
           >
+
             <Box opacity={isOpen ? 1 : 0}
                  transition="opacity 0.5s ease-out"
                  pointerEvents={isOpen ? "auto" : "none"}
@@ -125,6 +140,7 @@ export default function MacroTypeArea() {
                  }}
             >
               <HStack>
+
                 <Input
                   w="full"
                   variant="flushed"

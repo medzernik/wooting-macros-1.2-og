@@ -1,17 +1,17 @@
 import { ArrowBackIcon } from '@chakra-ui/icons'
 import {
-  HStack,
+  Box,
+  Button,
   Flex,
+  HStack,
   IconButton,
   Input,
   Tooltip,
-  Button,
   useColorModeValue,
   useDisclosure,
-  Box,
   VStack
 } from '@chakra-ui/react'
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useApplicationContext } from '../../../contexts/applicationContext'
 import { useMacroContext } from '../../../contexts/macroContext'
 import { useSelectedMacro } from '../../../contexts/selectors'
@@ -42,6 +42,10 @@ export default function Header({isEditing}: Props) {
     'primary-light.300',
     'primary-dark.600'
   )
+
+  const secondBg = useColorModeValue('blue.50', 'gray.900')
+
+  const borderColour = useColorModeValue('gray.400', 'gray.600')
   const shadowColour = useColorModeValue('xs', 'white-xs')
   const {
     isOpen: isTriggerModalOpen,
@@ -150,7 +154,7 @@ export default function Header({isEditing}: Props) {
 
       >
         <HStack justifyContent="space-between" w="full">
-          <Flex h="full" alignItems="center" gap="4" w="full" >
+          <Flex h="full" alignItems="center" gap="4" w="full">
             <IconButton
               aria-label="Back"
               variant="brand"
@@ -200,9 +204,51 @@ export default function Header({isEditing}: Props) {
             </Tooltip>
           </Flex>
         </HStack>
-        <HStack justifyContent="center" w="full">
+        <HStack justifyContent="center"
+                w="full">
           <MacroTypeArea/>
+
           <TriggerArea onOpen={onTriggerModalOpen}/>
+
+
+          <Tooltip
+            variant="brand"
+            label={saveButtonTooltipText}
+            placement="bottom-start"
+            hasArrow
+
+          >
+
+
+            <HStack
+              border="1px"
+              borderColor={borderColour}
+              rounded="md"
+              spacing="16px"
+              p="3"
+              position="relative" // Add relative position
+            >
+              <Button variant="yellowGradient">
+                Start
+              </Button>
+              <Button variant="yellowGradient">
+                Stop
+              </Button>
+              <Box
+                position="absolute"
+                // left="50%"
+                transform="translate(20%, -140%)"
+                fontSize="md"
+                zIndex="1"
+                bgColor={secondBg}
+
+              >
+                {"Macro Controls"}
+              </Box>
+            </HStack>
+
+          </Tooltip>
+
         </HStack>
 
       </VStack>

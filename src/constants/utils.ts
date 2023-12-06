@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/tauri'
-import { HIDCategory, MouseButton } from './enums'
+import { HIDCategory, MacroAction, MouseButton } from './enums'
 import {
   ActionEventType,
   ApplicationConfig,
@@ -26,6 +26,12 @@ export const updateSettings = (newConfig: ApplicationConfig): Promise<void> => {
 export const updateMacroOutput = (value: boolean): Promise<void> => {
   return invoke<void>('control_grabbing', {
     frontendBool: !value
+  })
+}
+export const executeMacro = (name: string, action: MacroAction): Promise<void> => {
+  return invoke<void>('execute_macro', {
+    name,
+    action,
   })
 }
 
