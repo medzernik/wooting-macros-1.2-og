@@ -142,6 +142,7 @@ export default function Header({ isEditing }: Props) {
         zIndex={1}
         bg={useMainBgColour()}
         w="full"
+        padding="15px"
         px={{ base: 4, md: 4, xl: 6 }}
         gap={4}
         shadow={shadowColour}
