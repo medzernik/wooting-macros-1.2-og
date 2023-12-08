@@ -19,7 +19,7 @@ import useMainBgColour from '../../hooks/useMainBgColour'
 import useBorderColour from '../../hooks/useBorderColour'
 
 export default function CollectionPanel() {
-  const { collections, selection, onCollectionUpdate } = useApplicationContext()
+  const { collections, selection, onCollectionUpdate, onSelectedCollectionDelete } = useApplicationContext()
   const currentCollection = useSelectedCollection()
   const {
     isOpen: isDeleteModalOpen,
@@ -139,7 +139,7 @@ export default function CollectionPanel() {
                   variant="brandWarning"
                   size="md"
                   isDisabled={isCollectionUndeletable}
-                  onClick={onDeleteModalOpen}
+                  onClick={currentCollection.macros.length !== 0 ? onDeleteModalOpen : onSelectedCollectionDelete }
                   aria-label="Delete Collection"
                 >
                   Delete Collection

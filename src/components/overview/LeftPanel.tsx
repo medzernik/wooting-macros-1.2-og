@@ -116,17 +116,6 @@ export default function LeftPanel({ onOpenSettingsModal }: Props) {
           </Tooltip>
         </HStack>
         <Divider />
-        <Button
-          size="lg"
-          w="full"
-          variant="yellowGradient"
-          p={2}
-          leftIcon={<AddIcon />}
-          fontSize="md"
-          onClick={onNewCollectionButtonPress}
-        >
-          New Collection
-        </Button>
       </VStack>
       <VStack
         w="full"
@@ -156,6 +145,19 @@ export default function LeftPanel({ onOpenSettingsModal }: Props) {
             }
           />
         ))}
+
+        <Button
+          size="md"
+          w="full"
+          margin="5px"
+          variant="yellowGradient"
+          padding="2px"
+          leftIcon={<AddIcon />}
+          fontSize="md"
+          onClick={onNewCollectionButtonPress}
+        >
+          New Collection
+        </Button>
       </VStack>
       </VStack>
       <HStack w="full" px={4} pb={4}>
